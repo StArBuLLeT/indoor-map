@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>wayfinding</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width">
+	<link rel="stylesheet" href="./assets/css/mystyle.css">
+</head>
+<body style="font-size: 10pt">
+	<ul class='custom-menu'>
+		<li data-action="source">Imposta come sorgente</li>
+		<li data-action="sink">Imposta come destinazione</li>
+	</ul>
+	<div id="content">
+		<div id="mapLoading">Loading</div>
+		<div id="myMaps">
+		</div>
+		<div id="controls">
+			<label for="beginSelect">Begin Route at</label>
+			<select id="beginSelect">
+				<option value="Entrance">Entrance</option>
+				<option value="A1">A1</option>
+				<option value="A2">A2</option>
+				<option value="A3">A3</option>
+				<option value="A4">A4</option>
+				<option value="A5">A5</option>
+				<option value="A6">A6</option>
+				<option value="A7">A7</option>
+				<option value="A8">A8</option>
+				<option value="A9">A9</option>
+				<option value="A10">A10</option>
+				<option value="A11">A11</option>
+				<option value="A12">A12</option>
+				<option value="A13">A13</option>
+				<option value="A14">A14</option>
+				<option value="A15">A15</option>
+				<option value="A16">A16</option>
+			</select>
+			<label for="endSelect">Show Route to</label>
+			<select id="endSelect">
+				<option value="Entrance">Entrance</option>
+				<option value="A1" selected>A1</option>
+				<option value="A2">A2</option>
+				<option value="A3">A3</option>
+				<option value="A4">A4</option>
+				<option value="A5">A5</option>
+				<option value="A6">A6</option>
+				<option value="A7">A7</option>
+				<option value="A8">A8</option>
+				<option value="A9">A9</option>
+				<option value="A10">A10</option>
+				<option value="A11">A11</option>
+				<option value="A12">A12</option>
+				<option value="A13">A13</option>
+				<option value="A14">A14</option>
+				<option value="A15">A15</option>
+				<option value="A16">A16</option>
+			</select>
+		</div>
+	</div>
+	<div>
+		<ul>
+			<li>Choose the source/destination using the correspondent drop-down menus. You ca also:</li>
+			<ul>
+				<li>Click with the left button of the mouse to choose the correspondent room as destination</li>
+				<li>Click with the right button of the mouse to choose if the correspondent room must be setted as source or destination</li>
+				<li>Zoom on the maps</li>
+			</ul>
+		</ul>
+	</div>
+	
+	<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="./assets/js/pathfinding.js"></script>
+
+	<script>
+		// Variables for wayfinding
+		var lastRoomSelected,zoomable_layer,zoom,MAPS=[{path:"http://wafi.iit.cnr.it/webvis/tmp/wayfinding/floor1.svg",id:"floor1"},{path:"http://wafi.iit.cnr.it/webvis/tmp/wayfinding/floor2.svg",id:"floor2"}],START_ROOM="Entrance",DEFAULT_MAP="floor1",MAX_ZOOM_IN=16,MAX_ZOOM_OUT=1,zoomScaleStep=2,zoomTranslationMap=d3.map(),translationStep=100,zoomObjects=[];function setZoomEnvironment(){zoom=d3.behavior.zoom().scaleExtent([MAX_ZOOM_OUT,MAX_ZOOM_IN]).on("zoom",zoomed),waitMapsCreation()}function waitMapsCreation(){var t=setInterval(function(){var e=!0;$.map(MAPS,function(t){0==$("#"+t.id).length&&(e=!1)}),e&&(clearInterval(t),$.map(MAPS,function(t){setZoomBehaviourForMap(t.id)}),$("#Rooms a").on("click",function(){$('#controls #endSelect option[value="'+$(this).prop("id")+'"]').attr("selected",!0)}).on("contextmenu",function(t){t.preventDefault(),lastRoomSelected=$(this).prop("id"),$(".custom-menu").finish().toggle(100).css({top:t.pageY+"px",left:t.pageX+"px"})}).on("mousedown",function(t){!$(t.target).parents(".custom-menu").length>0&&$(".custom-menu").hide(100)}),$(".custom-menu li").click(function(){switch($(this).attr("data-action")){case"source":$('#controls #beginSelect option[value="'+lastRoomSelected+'"]').attr("selected",!0),$("#controls #beginSelect").trigger("change");break;case"sink":$('#controls #endSelect option[value="'+lastRoomSelected+'"]').attr("selected",!0),$("#controls #endSelect").trigger("change")}$(".custom-menu").hide(100)}))},100)}function setZoomBehaviourForMap(t){var e=d3.select("#"+t+" svg").call(zoom),o=e.select("g"),n=e.attr("width").replace("px",""),a=e.attr("height").replace("px",""),i=d3.round(-n/2),c=d3.round(-a/2);zoomObjects[t]={zoomMap:o,svgWidth:n,svgHeight:a,centerX:i,centerY:c}}function zoomed(){var t=d3.select(this.parentNode).attr("id"),e=zoomObjects[t];e.centerX=d3.round(d3.event.translate[0]),e.centerY=d3.round(d3.event.translate[1]),e.zoomMap.attr("transform","translate("+e.centerX+", "+e.centerY+")scale("+d3.event.scale+")")}zoomTranslationMap.set(1,0),zoomTranslationMap.set(2,1),zoomTranslationMap.set(4,3),zoomTranslationMap.set(8,2.33),zoomTranslationMap.set(16,2.14),$(document).ready(function(){"use strict";$("#myMaps").wayfinding({maps:MAPS,path:{width:3,color:"cyan",radius:8,speed:8},startpoint:function(){return START_ROOM},defaultMap:DEFAULT_MAP}),$("#controls button").click(function(){$("#myMaps").wayfinding("currentMap",$(this).attr("id"))}),$("#controls #beginSelect").change(function(){$("#myMaps").wayfinding("startpoint",$(this).val()),""!==$("#controls .endSelect").val()&&$("#myMaps").wayfinding("routeTo",$("#controls #endSelect").val())}),$("#controls #endSelect").change(function(){$("#myMaps").wayfinding("routeTo",$(this).val())}),$("#controls #accessible").change(function(){void 0!==$("#controls #accessible:checked").val()?$("#myMaps").wayfinding("accessibleRoute",!0):$("#myMaps").wayfinding("accessibleRoute",!1),$("#myMaps").wayfinding("routeTo",$("#controls #endSelect").val())}),setZoomEnvironment()});
+</script>
+</body>
+</html>
